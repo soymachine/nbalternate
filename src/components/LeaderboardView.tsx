@@ -52,23 +52,26 @@ function LeaderRow({ player, rank, category, accent, glow, maxVal, isFirst }: {
   player: PlayoffLeader; rank: number; category: Category;
   accent: string; glow: string; maxVal: number; isFirst: boolean;
 }) {
+  const [hovered, setHovered] = useState(false);
   const pos = POS_CSS[player.position] ?? { bg: 'var(--c-surface-tab)', color: 'var(--c-text2)' };
   const val = player[category] as number;
-  const restBg = isFirst ? 'var(--c-surface-active)' : 'var(--c-surface)';
+  const bg = hovered
+    ? 'var(--c-row-hover)'
+    : isFirst ? 'var(--c-surface-active)' : 'var(--c-surface)';
 
   return (
     <div
       style={{
         display: 'flex', alignItems: 'center', gap: 12,
-        background: restBg,
+        background: bg,
         border: `1px solid ${isFirst ? 'var(--c-border-md)' : 'var(--c-border-sm)'}`,
         borderLeft: `3px solid ${isFirst ? accent : 'transparent'}`,
         borderRadius: 10, padding: '10px 14px',
         transition: 'background 0.15s',
         cursor: 'default',
       }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--c-row-hover)'; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = restBg; }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div style={{ width: 26, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
         <MedalIcon rank={rank} />

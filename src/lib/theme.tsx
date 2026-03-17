@@ -37,11 +37,11 @@ const LIGHT = `
   --c-sep:rgba(0,0,0,0.07); --c-tfoot-border:rgba(0,0,0,0.08);
   --c-plus:#16a34a; --c-minus:#dc2626;
   --c-scrollbar:#e5e7eb; --c-thumb:#9ca3af;
-  --c-pos-pg-bg:rgba(29,66,138,0.1);  --c-pos-pg:#1e40af;
-  --c-pos-sg-bg:rgba(6,120,140,0.1);  --c-pos-sg:#0e7490;
-  --c-pos-sf-bg:rgba(23,120,60,0.1);  --c-pos-sf:#15803d;
-  --c-pos-pf-bg:rgba(180,80,16,0.1);  --c-pos-pf:#c2410c;
-  --c-pos-c-bg:rgba(110,40,200,0.1);  --c-pos-c:#7c3aed;
+  --c-pos-pg-bg:rgba(29,66,138,0.14);  --c-pos-pg:#1e40af;
+  --c-pos-sg-bg:rgba(6,120,140,0.14);  --c-pos-sg:#0e7490;
+  --c-pos-sf-bg:rgba(23,120,60,0.14);  --c-pos-sf:#15803d;
+  --c-pos-pf-bg:rgba(180,80,16,0.14);  --c-pos-pf:#c2410c;
+  --c-pos-c-bg:rgba(110,40,200,0.14);  --c-pos-c:#7c3aed;
 `;
 
 const Ctx = createContext<{ mode: ThemeMode; toggle: () => void }>({ mode: 'dark', toggle() {} });
