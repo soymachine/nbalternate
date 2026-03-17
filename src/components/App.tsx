@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { PlayoffBracket, TeamWithRoster } from '../lib/types';
 import { getTeamsWithRosters } from '../lib/nbaApi';
 import { selectPlayoffTeams, simulateBracket } from '../lib/simulator';
@@ -52,6 +52,14 @@ function Inner() {
   const [loadingMsg, setLoadingMsg] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('bracket');
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 600 : false
+  );
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 600);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
   async function generate() {
     setError(null);
@@ -92,18 +100,20 @@ function Inner() {
         boxShadow: '0 2px 16px rgba(0,0,0,0.15)',
       }}>
         <div style={{ height: 3, background: 'linear-gradient(90deg, #C8102E 0%, #1D428A 100%)' }} />
-        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: isMobile ? '0 12px' : '0 24px', height: 56, display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 16 }}>
 
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 26 }}>🏀</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: isMobile ? 22 : 26 }}>🏀</span>
             <div>
-              <div style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 20, lineHeight: 1, letterSpacing: '0.02em', color: 'var(--c-text1)' }}>
+              <div style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: isMobile ? 17 : 20, lineHeight: 1, letterSpacing: '0.02em', color: 'var(--c-text1)' }}>
                 NBA<span style={{ color: '#C8102E' }}>alternate</span>
               </div>
-              <div style={{ fontSize: 9, color: 'var(--c-text4)', fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', lineHeight: 1.2 }}>
-                Parallel Universe Playoffs
-              </div>
+              {!isMobile && (
+                <div style={{ fontSize: 9, color: 'var(--c-text4)', fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', lineHeight: 1.2 }}>
+                  Parallel Universe Playoffs
+                </div>
+              )}
             </div>
           </div>
 
@@ -118,15 +128,28 @@ function Inner() {
                   {([['bracket', '🏆', 'Bracket'], ['leaders', '📊', 'Leaders']] as const).map(([key, icon, label]) => (
                     <button key={key} onClick={() => setTab(key)}
                       style={{
-                        padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                        padding: isMobile ? '6px 10px' : '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer',
                         fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 13,
                         letterSpacing: '0.05em', textTransform: 'uppercase', transition: 'all 0.15s',
                         background: tab === key ? 'var(--c-surface-active)' : 'transparent',
                         color: tab === key ? 'var(--c-text1)' : 'var(--c-text4)',
                       }}
-                    >{icon} {label}</button>
+                    >{isMobile ? icon : `${icon} ${label}`}</button>
                   ))}
                 </div>
+                <button onClick={generate} disabled={loading}
+                  title={`Resimulate ${year - 1}–${year} with a new random seed`}
+                  style={{
+                    padding: '7px 14px', borderRadius: 6,
+                    border: '1px solid var(--c-border-md)',
+                    background: 'transparent', color: 'var(--c-text3)', cursor: 'pointer',
+                    fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 12,
+                    letterSpacing: '0.08em', textTransform: 'uppercase', transition: 'all 0.15s',
+                    opacity: loading ? 0.4 : 1,
+                  }}
+                  onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLElement).style.color = 'var(--c-text1)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--c-text3)'; }}
+                >{isMobile ? '↺' : '↺ Run Again'}</button>
                 <button onClick={() => setBracket(null)}
                   style={{
                     padding: '7px 14px', borderRadius: 6, border: '1px solid var(--c-border-md)',
@@ -136,7 +159,7 @@ function Inner() {
                   }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--c-text1)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--c-text4)'; }}
-                >← New</button>
+                >{isMobile ? '←' : '← New'}</button>
               </>
             )}
             <ThemeToggle />

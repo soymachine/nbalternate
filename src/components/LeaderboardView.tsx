@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { PlayoffBracket } from '../lib/types';
 import { buildLeaderboard, topBy, type PlayoffLeader } from '../lib/leaderboard';
 
@@ -48,9 +48,9 @@ function StatBar({ value, max, accent }: { value: number; max: number; accent: s
   );
 }
 
-function LeaderRow({ player, rank, category, accent, glow, maxVal, isFirst }: {
+function LeaderRow({ player, rank, category, accent, glow, maxVal, isFirst, isMobile }: {
   player: PlayoffLeader; rank: number; category: Category;
-  accent: string; glow: string; maxVal: number; isFirst: boolean;
+  accent: string; glow: string; maxVal: number; isFirst: boolean; isMobile: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const pos = POS_CSS[player.position] ?? { bg: 'var(--c-surface-tab)', color: 'var(--c-text2)' };
@@ -99,34 +99,38 @@ function LeaderRow({ player, rank, category, accent, glow, maxVal, isFirst }: {
         <StatBar value={val} max={maxVal} accent={accent} />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
-        {category !== 'ppg' && (
+      {!isMobile && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+          {category !== 'ppg' && (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: 'var(--c-stat-dim)', letterSpacing: '0.03em' }}>{player.ppg}</div>
+              <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: 'var(--c-text4)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>pts</div>
+            </div>
+          )}
+          {category !== 'rpg' && (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: 'var(--c-stat-dim)', letterSpacing: '0.03em' }}>{player.rpg}</div>
+              <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: 'var(--c-text4)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>reb</div>
+            </div>
+          )}
+          {category !== 'apg' && (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: 'var(--c-stat-dim)', letterSpacing: '0.03em' }}>{player.apg}</div>
+              <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: 'var(--c-text4)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>ast</div>
+            </div>
+          )}
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: 'var(--c-stat-dim)', letterSpacing: '0.03em' }}>{player.ppg}</div>
-            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: 'var(--c-text4)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>pts</div>
+            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: 'var(--c-stat-dim)', letterSpacing: '0.03em' }}>{pct(player.fgPct)}</div>
+            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: 'var(--c-text4)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>fg%</div>
           </div>
-        )}
-        {category !== 'rpg' && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: 'var(--c-stat-dim)', letterSpacing: '0.03em' }}>{player.rpg}</div>
-            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: 'var(--c-text4)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>reb</div>
-          </div>
-        )}
-        {category !== 'apg' && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: 'var(--c-stat-dim)', letterSpacing: '0.03em' }}>{player.apg}</div>
-            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: 'var(--c-text4)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>ast</div>
-          </div>
-        )}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: 'var(--c-stat-dim)', letterSpacing: '0.03em' }}>{pct(player.fgPct)}</div>
-          <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: 'var(--c-text4)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>fg%</div>
         </div>
-      </div>
+      )}
 
       <div style={{
-        fontFamily: '"Bebas Neue", sans-serif', fontSize: 36, lineHeight: 1,
-        letterSpacing: '0.02em', color: accent, flexShrink: 0, minWidth: 52, textAlign: 'right',
+        fontFamily: '"Bebas Neue", sans-serif',
+        fontSize: isMobile ? 28 : 36,
+        lineHeight: 1, letterSpacing: '0.02em', color: accent, flexShrink: 0,
+        minWidth: isMobile ? 40 : 52, textAlign: 'right',
         textShadow: isFirst ? `0 0 16px ${glow}` : 'none',
       }}>{val}</div>
     </div>
@@ -135,16 +139,25 @@ function LeaderRow({ player, rank, category, accent, glow, maxVal, isFirst }: {
 
 export function LeaderboardView({ bracket }: Props) {
   const [active, setActive] = useState<Category>('ppg');
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 640 : false
+  );
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
   const leaders = buildLeaderboard(bracket);
   const cat = CATEGORIES.find(c => c.key === active)!;
   const top = topBy(leaders, active, 15);
   const maxVal = (top[0]?.[active] as number) ?? 1;
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 16px 64px' }}>
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: isMobile ? '20px 12px 48px' : '32px 16px 64px' }}>
 
       {/* TITLE */}
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
+      <div style={{ textAlign: 'center', marginBottom: isMobile ? 20 : 28 }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
           background: 'rgba(255,184,28,0.08)', border: '1px solid rgba(255,184,28,0.2)',
@@ -155,7 +168,8 @@ export function LeaderboardView({ bracket }: Props) {
           </span>
         </div>
         <h2 style={{
-          fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 42,
+          fontFamily: 'Oswald, sans-serif', fontWeight: 700,
+          fontSize: isMobile ? 30 : 42,
           lineHeight: 0.95, letterSpacing: '0.01em', textTransform: 'uppercase',
           color: 'var(--c-text1)', marginBottom: 0,
         }}>Playoff Leaders</h2>
@@ -188,11 +202,13 @@ export function LeaderboardView({ bracket }: Props) {
                 textShadow: isActive ? `0 0 10px ${c.glow}` : 'none',
                 transition: 'all 0.15s',
               }}>{c.abbr}</span>
-              <span style={{
-                fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 9,
-                letterSpacing: '0.15em', textTransform: 'uppercase',
-                color: isActive ? 'var(--c-text2)' : 'var(--c-text4)', transition: 'color 0.15s',
-              }}>{c.label}</span>
+              {!isMobile && (
+                <span style={{
+                  fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 9,
+                  letterSpacing: '0.15em', textTransform: 'uppercase',
+                  color: isActive ? 'var(--c-text2)' : 'var(--c-text4)', transition: 'color 0.15s',
+                }}>{c.label}</span>
+              )}
             </button>
           );
         })}
@@ -227,6 +243,7 @@ export function LeaderboardView({ bracket }: Props) {
             glow={cat.glow}
             maxVal={maxVal}
             isFirst={i === 0}
+            isMobile={isMobile}
           />
         ))}
       </div>
