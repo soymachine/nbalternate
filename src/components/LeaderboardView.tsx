@@ -14,12 +14,13 @@ const CATEGORIES: { key: Category; label: string; abbr: string; accent: string; 
   { key: 'bpg', label: 'Blocks',   abbr: 'BLK', accent: '#7c3aed', glow: 'rgba(124,58,237,0.35)'  },
 ];
 
-const POS_COLORS: Record<string, { bg: string; color: string }> = {
-  PG: { bg: 'rgba(29,66,138,0.35)',   color: '#8fb4ff' },
-  SG: { bg: 'rgba(6,120,140,0.35)',   color: '#5cd8e8' },
-  SF: { bg: 'rgba(23,120,60,0.35)',   color: '#5ce890' },
-  PF: { bg: 'rgba(180,80,16,0.35)',   color: '#ffaa55' },
-  C:  { bg: 'rgba(110,40,200,0.35)',  color: '#c084fc' },
+// Position badge colors sourced from CSS variables (set per theme in theme.tsx)
+const POS_CSS: Record<string, { bg: string; color: string }> = {
+  PG: { bg: 'var(--c-pos-pg-bg)', color: 'var(--c-pos-pg)' },
+  SG: { bg: 'var(--c-pos-sg-bg)', color: 'var(--c-pos-sg)' },
+  SF: { bg: 'var(--c-pos-sf-bg)', color: 'var(--c-pos-sf)' },
+  PF: { bg: 'var(--c-pos-pf-bg)', color: 'var(--c-pos-pf)' },
+  C:  { bg: 'var(--c-pos-c-bg)',  color: 'var(--c-pos-c)'  },
 };
 
 function pct(n: number) {
@@ -41,26 +42,25 @@ function MedalIcon({ rank }: { rank: number }) {
 function StatBar({ value, max, accent }: { value: number; max: number; accent: string }) {
   const w = Math.min(100, (value / max) * 100);
   return (
-    <div style={{ width: '100%', height: 2, background: 'var(--c-row-hover)', borderRadius: 2, marginTop: 5, overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: 2, background: 'var(--c-border)', borderRadius: 2, marginTop: 5, overflow: 'hidden' }}>
       <div style={{ height: '100%', width: `${w}%`, background: accent, borderRadius: 2, transition: 'width 0.4s ease' }} />
     </div>
   );
 }
 
-function LeaderRow({
-  player, rank, category, accent, glow, maxVal, isFirst,
-}: {
+function LeaderRow({ player, rank, category, accent, glow, maxVal, isFirst }: {
   player: PlayoffLeader; rank: number; category: Category;
   accent: string; glow: string; maxVal: number; isFirst: boolean;
 }) {
-  const pos = POS_COLORS[player.position] ?? { bg: 'rgba(255,255,255,0.08)', color: 'var(--c-text2)' };
+  const pos = POS_CSS[player.position] ?? { bg: 'var(--c-surface-tab)', color: 'var(--c-text2)' };
   const val = player[category] as number;
+  const restBg = isFirst ? 'var(--c-surface-active)' : 'var(--c-surface)';
 
   return (
     <div
       style={{
         display: 'flex', alignItems: 'center', gap: 12,
-        background: isFirst ? 'var(--c-surface-active)' : 'var(--c-surface)',
+        background: restBg,
         border: `1px solid ${isFirst ? 'var(--c-border-md)' : 'var(--c-border-sm)'}`,
         borderLeft: `3px solid ${isFirst ? accent : 'transparent'}`,
         borderRadius: 10, padding: '10px 14px',
@@ -68,7 +68,7 @@ function LeaderRow({
         cursor: 'default',
       }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--c-row-hover)'; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isFirst ? 'rgba(255,255,255,0.04)' : '#0F1623'; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = restBg; }}
     >
       <div style={{ width: 26, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
         <MedalIcon rank={rank} />
@@ -147,14 +147,14 @@ export function LeaderboardView({ bracket }: Props) {
           background: 'rgba(255,184,28,0.08)', border: '1px solid rgba(255,184,28,0.2)',
           borderRadius: 999, padding: '4px 14px', marginBottom: 14,
         }}>
-          <span style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 10, letterSpacing: '0.25em', color: '#8a6a00', textTransform: 'uppercase' }}>
+          <span style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 10, letterSpacing: '0.25em', color: 'var(--c-champ-text)', textTransform: 'uppercase' }}>
             {bracket.year - 1}–{bracket.year} Alternate Universe
           </span>
         </div>
         <h2 style={{
           fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 42,
           lineHeight: 0.95, letterSpacing: '0.01em', textTransform: 'uppercase',
-          color: '#fff', marginBottom: 0,
+          color: 'var(--c-text1)', marginBottom: 0,
         }}>Playoff Leaders</h2>
       </div>
 
@@ -173,7 +173,7 @@ export function LeaderboardView({ bracket }: Props) {
               style={{
                 flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
                 gap: 2, padding: '10px 4px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                background: isActive ? '#1a2640' : 'transparent',
+                background: isActive ? 'var(--c-surface-tab)' : 'transparent',
                 borderBottom: isActive ? `2px solid ${c.accent}` : '2px solid transparent',
                 transition: 'all 0.15s',
               }}
@@ -181,14 +181,14 @@ export function LeaderboardView({ bracket }: Props) {
               <span style={{
                 fontFamily: '"Bebas Neue", sans-serif', fontSize: 20, lineHeight: 1,
                 letterSpacing: '0.03em',
-                color: isActive ? c.accent : '#2a3a55',
+                color: isActive ? c.accent : 'var(--c-text4)',
                 textShadow: isActive ? `0 0 10px ${c.glow}` : 'none',
                 transition: 'all 0.15s',
               }}>{c.abbr}</span>
               <span style={{
                 fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 9,
                 letterSpacing: '0.15em', textTransform: 'uppercase',
-                color: isActive ? '#8099bb' : '#2a3a55', transition: 'color 0.15s',
+                color: isActive ? 'var(--c-text2)' : 'var(--c-text4)', transition: 'color 0.15s',
               }}>{c.label}</span>
             </button>
           );
@@ -239,7 +239,7 @@ export function LeaderboardView({ bracket }: Props) {
       }}>
         <span style={{ fontSize: 28, lineHeight: 1 }}>🏆</span>
         <div>
-          <div style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: '#8a6a00', marginBottom: 3 }}>
+          <div style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--c-champ-text)', marginBottom: 3 }}>
             Champion
           </div>
           <div style={{

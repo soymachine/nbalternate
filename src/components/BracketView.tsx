@@ -43,7 +43,7 @@ export function BracketView({ bracket }: Props) {
             onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
           />
           <div>
-            <div style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 11, letterSpacing: '0.25em', color: '#8a6a00', textTransform: 'uppercase', marginBottom: 4 }}>
+            <div style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 11, letterSpacing: '0.25em', color: 'var(--c-champ-text)', textTransform: 'uppercase', marginBottom: 4 }}>
               🏆 Alternate Universe Champion — {bracket.year - 1}–{bracket.year}
             </div>
             <div style={{
@@ -53,7 +53,7 @@ export function BracketView({ bracket }: Props) {
               WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
               filter: 'drop-shadow(0 0 16px rgba(255,184,28,0.5))',
             }}>{champ.team.city} {champ.team.name}</div>
-            <div style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 13, color: '#6a5000', marginTop: 3, letterSpacing: '0.08em' }}>
+            <div style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 13, color: 'var(--c-champ-sub)', marginTop: 3, letterSpacing: '0.08em' }}>
               Seed #{champ.seed} · {champ.team.conference} Conference · Win% {(champ.rawWinPct * 100).toFixed(1)}%
             </div>
           </div>
@@ -91,7 +91,7 @@ export function BracketView({ bracket }: Props) {
             </div>
             <div style={{ flex: 1, marginTop: 148 }}>
               <div style={{ textAlign: 'center', marginBottom: 8 }}>
-                <span style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 11, letterSpacing: '0.2em', color: '#8a6a00', textTransform: 'uppercase' }}>🏆 NBA Finals</span>
+                <span style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 11, letterSpacing: '0.2em', color: 'var(--c-champ-text)', textTransform: 'uppercase' }}>🏆 NBA Finals</span>
               </div>
               <SeriesCard series={bracket.nbaFinals} onGameClick={setSelectedGame} finals />
             </div>
