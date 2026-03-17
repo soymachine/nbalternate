@@ -3,6 +3,9 @@ import type { PlayoffBracket, TeamWithRoster } from '../lib/types';
 import { getTeamsWithRosters } from '../lib/nbaApi';
 import { selectPlayoffTeams, simulateBracket } from '../lib/simulator';
 import { BracketView } from './BracketView';
+import { LeaderboardView } from './LeaderboardView';
+
+type Tab = 'bracket' | 'leaders';
 
 const YEAR_RANGE = { min: 1985, max: 1995 };
 
@@ -25,6 +28,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('bracket');
 
   async function generate() {
     setError(null);
@@ -59,6 +63,7 @@ export default function App() {
       const result = simulateBracket(east, west, year);
 
       setBracket(result);
+      setTab('bracket');
     } catch (err: any) {
       setError(err.message ?? 'Something went wrong');
     } finally {
@@ -83,12 +88,37 @@ export default function App() {
           </div>
 
           {bracket && (
-            <button
-              onClick={() => setBracket(null)}
-              className="ml-auto text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded transition-colors"
-            >
-              ← New Simulation
-            </button>
+            <div className="ml-auto flex items-center gap-2">
+              {/* Tab switcher */}
+              <div className="flex bg-gray-800 border border-gray-700 rounded-lg p-0.5 gap-0.5">
+                <button
+                  onClick={() => setTab('bracket')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                    tab === 'bracket'
+                      ? 'bg-gray-600 text-white'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  🏆 Bracket
+                </button>
+                <button
+                  onClick={() => setTab('leaders')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                    tab === 'leaders'
+                      ? 'bg-gray-600 text-white'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  📊 Leaders
+                </button>
+              </div>
+              <button
+                onClick={() => setBracket(null)}
+                className="text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded transition-colors"
+              >
+                ← New
+              </button>
+            </div>
           )}
         </div>
       </header>
@@ -173,10 +203,14 @@ export default function App() {
         </div>
       )}
 
-      {/* Bracket */}
+      {/* Bracket / Leaderboard */}
       {bracket && !loading && (
         <div className="animate-fade-in">
-          <BracketView bracket={bracket} />
+          {tab === 'bracket' ? (
+            <BracketView bracket={bracket} />
+          ) : (
+            <LeaderboardView bracket={bracket} />
+          )}
         </div>
       )}
     </div>
