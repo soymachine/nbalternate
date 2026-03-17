@@ -1,119 +1,117 @@
 import { useState } from 'react';
-import type { PlayoffBracket, SeriesResult, TeamWithRoster } from '../lib/types';
+import type { PlayoffBracket, GameResult } from '../lib/types';
 import { SeriesCard } from './SeriesCard';
 import { GameModal } from './GameModal';
-import type { GameResult } from '../lib/types';
 
-interface Props {
-  bracket: PlayoffBracket;
-}
+interface Props { bracket: PlayoffBracket; }
+
+const COL_LABELS = ['1ST ROUND', 'CONF. SEMIS', 'CONF. FINALS', 'NBA FINALS', 'CONF. FINALS', 'CONF. SEMIS', '1ST ROUND'];
 
 export function BracketView({ bracket }: Props) {
-  const [selectedGame, setSelectedGame] = useState<{
-    game: GameResult;
-    homeTeam: string;
-    awayTeam: string;
-  } | null>(null);
-
+  const [selectedGame, setSelectedGame] = useState<{ game: GameResult; homeTeam: string; awayTeam: string } | null>(null);
   const champ = bracket.champion;
 
   return (
-    <div className="pb-20">
-      {/* Champion banner */}
-      <div className="bg-gradient-to-r from-yellow-950 via-yellow-900 to-yellow-950 border-b border-yellow-700/40 py-6 px-6 text-center">
-        <p className="text-yellow-400 text-xs font-bold tracking-[0.2em] uppercase mb-1">
-          🏆 Alternate Universe Champion — {bracket.year}
-        </p>
-        <h2 className="text-4xl font-black text-yellow-100">
-          {champ.team.city} {champ.team.name}
-        </h2>
-        <p className="text-yellow-600 text-sm mt-1">
-          Seed #{champ.seed} · {champ.team.conference} Conference ·{' '}
-          Win%: {(champ.rawWinPct * 100).toFixed(1)}%
-        </p>
-      </div>
+    <div style={{ paddingBottom: 60 }}>
 
-      {/* Bracket layout */}
-      <div className="max-w-screen-2xl mx-auto px-4 pt-8 overflow-x-auto">
-        <div className="min-w-[1100px]">
-          {/* Column headers */}
-          <div className="grid grid-cols-7 gap-2 mb-4">
-            {['1st Round', 'Conf. Semis', 'Conf. Finals', 'NBA Finals', 'Conf. Finals', 'Conf. Semis', '1st Round'].map(
-              (label, i) => (
-                <div key={i} className="text-center text-xs font-bold text-gray-500 uppercase tracking-widest py-1">
-                  {label}
-                </div>
-              )
-            )}
+      {/* ── CHAMPION BANNER ── */}
+      <div style={{
+        position: 'relative', overflow: 'hidden',
+        background: 'linear-gradient(90deg, #0A0C08 0%, #1a1500 30%, #221900 50%, #1a1500 70%, #0A0C08 100%)',
+        borderBottom: '1px solid rgba(255,184,28,0.2)',
+        padding: '24px 24px',
+        textAlign: 'center',
+      }}>
+        {/* Gold radial glow */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse 60% 100% at 50% 50%, rgba(255,184,28,0.08) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ position: 'relative' }}>
+          <div style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 11, letterSpacing: '0.25em', color: '#8a6a00', textTransform: 'uppercase', marginBottom: 6 }}>
+            🏆 Alternate Universe Champion — {bracket.year - 1}–{bracket.year}
           </div>
-
-          {/* Main bracket row */}
-          <div className="flex gap-2 items-start">
-            {/* EAST — R1 */}
-            <div className="flex flex-col gap-4 flex-1">
-              {bracket.eastR1.map(s => (
-                <SeriesCard key={s.matchupId} series={s} onGameClick={setSelectedGame} compact />
-              ))}
-            </div>
-
-            {/* EAST — R2 */}
-            <div className="flex flex-col gap-4 flex-1 mt-12">
-              {bracket.eastR2.map(s => (
-                <SeriesCard key={s.matchupId} series={s} onGameClick={setSelectedGame} compact />
-              ))}
-            </div>
-
-            {/* EAST — Finals */}
-            <div className="flex flex-col flex-1 mt-24">
-              <SeriesCard series={bracket.eastFinal} onGameClick={setSelectedGame} />
-            </div>
-
-            {/* NBA Finals (center) */}
-            <div className="flex flex-col flex-1 mt-32">
-              <div className="text-center mb-2">
-                <span className="text-xs font-black text-yellow-500 tracking-widest uppercase">
-                  🏆 NBA Finals
-                </span>
-              </div>
-              <SeriesCard series={bracket.nbaFinals} onGameClick={setSelectedGame} finals />
-            </div>
-
-            {/* WEST — Finals */}
-            <div className="flex flex-col flex-1 mt-24">
-              <SeriesCard series={bracket.westFinal} onGameClick={setSelectedGame} />
-            </div>
-
-            {/* WEST — R2 */}
-            <div className="flex flex-col gap-4 flex-1 mt-12">
-              {bracket.westR2.map(s => (
-                <SeriesCard key={s.matchupId} series={s} onGameClick={setSelectedGame} compact />
-              ))}
-            </div>
-
-            {/* WEST — R1 */}
-            <div className="flex flex-col gap-4 flex-1">
-              {bracket.westR1.map(s => (
-                <SeriesCard key={s.matchupId} series={s} onGameClick={setSelectedGame} compact />
-              ))}
-            </div>
+          <div style={{
+            fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 42, lineHeight: 1,
+            letterSpacing: '0.02em', textTransform: 'uppercase',
+            background: 'linear-gradient(180deg, #FFE180 0%, #FFB81C 50%, #E8960A 100%)',
+            WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            textShadow: 'none',
+            filter: 'drop-shadow(0 0 16px rgba(255,184,28,0.5))',
+          }}>
+            {champ.team.city} {champ.team.name}
           </div>
-
-          {/* Conference labels */}
-          <div className="flex justify-between mt-8 px-2">
-            <span className="text-sm font-bold text-nba-blue uppercase tracking-widest">← East Conference</span>
-            <span className="text-sm font-bold text-nba-red uppercase tracking-widest">West Conference →</span>
+          <div style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 13, color: '#6a5000', marginTop: 4, letterSpacing: '0.08em' }}>
+            Seed #{champ.seed} · {champ.team.conference} Conference · Win% {(champ.rawWinPct * 100).toFixed(1)}%
           </div>
         </div>
       </div>
 
-      {/* Series legend */}
-      <div className="max-w-screen-2xl mx-auto px-4 mt-8">
-        <p className="text-xs text-gray-600 text-center">
-          Click any game result to see the full box score
-        </p>
+      {/* ── BRACKET ── */}
+      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '24px 16px 0', overflowX: 'auto' }}>
+        <div style={{ minWidth: 1100 }}>
+
+          {/* Column headers */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8, marginBottom: 12 }}>
+            {COL_LABELS.map((label, i) => (
+              <div key={i} style={{
+                textAlign: 'center',
+                fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 10,
+                letterSpacing: '0.2em', textTransform: 'uppercase',
+                color: i === 3 ? '#6a5000' : (i < 3 ? '#1a3060' : '#60101a'),
+                borderBottom: `2px solid ${i === 3 ? '#FFB81C30' : i < 3 ? '#1D428A30' : '#C8102E30'}`,
+                paddingBottom: 8,
+              }}>{label}</div>
+            ))}
+          </div>
+
+          {/* Bracket columns */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            {/* E R1 */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {bracket.eastR1.map(s => <SeriesCard key={s.matchupId} series={s} onGameClick={setSelectedGame} compact />)}
+            </div>
+            {/* E R2 */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 56 }}>
+              {bracket.eastR2.map(s => <SeriesCard key={s.matchupId} series={s} onGameClick={setSelectedGame} compact />)}
+            </div>
+            {/* E Finals */}
+            <div style={{ flex: 1, marginTop: 112 }}>
+              <SeriesCard series={bracket.eastFinal} onGameClick={setSelectedGame} />
+            </div>
+            {/* NBA Finals */}
+            <div style={{ flex: 1, marginTop: 148 }}>
+              <div style={{ textAlign: 'center', marginBottom: 8 }}>
+                <span style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 11, letterSpacing: '0.2em', color: '#6a5000', textTransform: 'uppercase' }}>🏆 NBA Finals</span>
+              </div>
+              <SeriesCard series={bracket.nbaFinals} onGameClick={setSelectedGame} finals />
+            </div>
+            {/* W Finals */}
+            <div style={{ flex: 1, marginTop: 112 }}>
+              <SeriesCard series={bracket.westFinal} onGameClick={setSelectedGame} />
+            </div>
+            {/* W R2 */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 56 }}>
+              {bracket.westR2.map(s => <SeriesCard key={s.matchupId} series={s} onGameClick={setSelectedGame} compact />)}
+            </div>
+            {/* W R1 */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {bracket.westR1.map(s => <SeriesCard key={s.matchupId} series={s} onGameClick={setSelectedGame} compact />)}
+            </div>
+          </div>
+
+          {/* Conference labels */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24, paddingBottom: 8, borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: 16 }}>
+            <span style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 11, letterSpacing: '0.2em', color: '#1D428A', textTransform: 'uppercase' }}>← Eastern Conference</span>
+            <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: '#253545', letterSpacing: '0.1em' }}>Click any game to see box score</span>
+            <span style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 11, letterSpacing: '0.2em', color: '#C8102E', textTransform: 'uppercase' }}>Western Conference →</span>
+          </div>
+        </div>
       </div>
 
-      {/* Game modal */}
+      {/* Modal */}
       {selectedGame && (
         <GameModal
           game={selectedGame.game}

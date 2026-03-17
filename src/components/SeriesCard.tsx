@@ -7,168 +7,93 @@ interface Props {
   finals?: boolean;
 }
 
-const CONF_COLORS: Record<string, string> = {
-  East: 'text-nba-blue',
-  West: 'text-nba-red',
-  Finals: 'text-yellow-400',
+const CONF_ACCENT: Record<string, string> = {
+  East:   '#1D428A',
+  West:   '#C8102E',
+  Finals: '#FFB81C',
 };
-
-const CONF_BORDER: Record<string, string> = {
-  East: 'border-nba-blue/30',
-  West: 'border-nba-red/30',
-  Finals: 'border-yellow-500/40',
+const CONF_GLOW: Record<string, string> = {
+  East:   'rgba(29,66,138,0.3)',
+  West:   'rgba(200,16,46,0.3)',
+  Finals: 'rgba(255,184,28,0.3)',
 };
 
 export function SeriesCard({ series, onGameClick, compact = false, finals = false }: Props) {
   const { teamA, teamB, games, winner, seriesScore } = series;
-  const conf = series.conference ?? 'East';
-
+  const conf   = series.conference ?? 'East';
+  const accent = CONF_ACCENT[conf];
+  const glow   = CONF_GLOW[conf];
   const aIsWinner = winner.team.id === teamA.team.id;
   const [aWins, bWins] = seriesScore;
 
   return (
-    <div
-      className={`bg-gray-900 border rounded-xl overflow-hidden ${CONF_BORDER[conf]} ${
-        finals ? 'ring-1 ring-yellow-500/30' : ''
-      }`}
-    >
-      {/* Teams header */}
-      <div className="px-3 py-2 border-b border-gray-800">
-        <TeamRow
-          name={`${teamA.team.abbreviation}`}
-          fullName={`${teamA.team.city} ${teamA.team.name}`}
-          seed={teamA.seed}
-          wins={aWins}
-          isWinner={aIsWinner}
-          conf={conf}
-        />
-        <div className="border-t border-gray-800 mt-1.5 pt-1.5">
-          <TeamRow
-            name={`${teamB.team.abbreviation}`}
-            fullName={`${teamB.team.city} ${teamB.team.name}`}
-            seed={teamB.seed}
-            wins={bWins}
-            isWinner={!aIsWinner}
-            conf={conf}
-          />
-        </div>
+    <div style={{
+      background: '#0F1623',
+      borderRadius: 10,
+      border: '1px solid rgba(255,255,255,0.06)',
+      borderLeft: `3px solid ${accent}`,
+      overflow: 'hidden',
+      boxShadow: finals
+        ? `0 0 24px ${glow}, 0 4px 20px rgba(0,0,0,0.5)`
+        : '0 2px 12px rgba(0,0,0,0.4)',
+    }}>
+      {/* Teams */}
+      <div style={{ padding: '10px 12px 8px' }}>
+        <TeamRow abbr={teamA.team.abbreviation} fullName={`${teamA.team.city} ${teamA.team.name}`}
+          seed={teamA.seed} wins={aWins} isWinner={aIsWinner} accent={accent} />
+        <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '5px 0' }} />
+        <TeamRow abbr={teamB.team.abbreviation} fullName={`${teamB.team.city} ${teamB.team.name}`}
+          seed={teamB.seed} wins={bWins} isWinner={!aIsWinner} accent={accent} />
       </div>
 
-      {/* Games list */}
-      {!compact && (
-        <div className="px-3 py-2 space-y-1">
-          {games.map(g => (
-            <GameRow key={g.gameNumber} game={g} series={series} onGameClick={onGameClick} />
-          ))}
-        </div>
-      )}
-
-      {compact && (
-        <div className="px-3 py-2">
-          <div className="flex gap-1 flex-wrap">
-            {games.map(g => {
-              const aIsHome = g.homeTeam === teamA.team.abbreviation;
-              const homeScore = g.homeScore;
-              const awayScore = g.awayScore;
-              const aWon = g.winner === teamA.team.abbreviation;
-
-              return (
-                <button
-                  key={g.gameNumber}
-                  onClick={() =>
-                    onGameClick({
-                      game: g,
-                      homeTeam: aIsHome
-                        ? `${teamA.team.city} ${teamA.team.name}`
-                        : `${teamB.team.city} ${teamB.team.name}`,
-                      awayTeam: aIsHome
-                        ? `${teamB.team.city} ${teamB.team.name}`
-                        : `${teamA.team.city} ${teamA.team.name}`,
-                    })
-                  }
-                  className={`text-xs px-2 py-0.5 rounded font-mono hover:ring-1 ring-white/20 transition-all ${
-                    aWon ? 'bg-gray-700 text-white' : 'bg-gray-800 text-gray-400'
-                  }`}
-                  title={`G${g.gameNumber}: ${g.homeTeam} ${homeScore} - ${g.awayScore} ${g.awayTeam}`}
-                >
-                  G{g.gameNumber}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* Game pills */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '6px 12px 8px', display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        {games.map(g => {
+          const aIsHome = g.homeTeam === teamA.team.abbreviation;
+          const aWon    = g.winner === teamA.team.abbreviation;
+          return (
+            <button key={g.gameNumber}
+              onClick={() => onGameClick({
+                game: g,
+                homeTeam: aIsHome ? `${teamA.team.city} ${teamA.team.name}` : `${teamB.team.city} ${teamB.team.name}`,
+                awayTeam: aIsHome ? `${teamB.team.city} ${teamB.team.name}` : `${teamA.team.city} ${teamA.team.name}`,
+              })}
+              title={`G${g.gameNumber}: ${g.awayTeam} ${g.awayScore}–${g.homeScore} ${g.homeTeam} — click for box score`}
+              style={{
+                padding: '3px 9px', borderRadius: 5, border: 'none', cursor: 'pointer',
+                fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 11, letterSpacing: '0.05em',
+                background: aWon ? accent : 'rgba(255,255,255,0.05)',
+                color: aWon ? '#fff' : '#3a4f6a',
+                boxShadow: aWon ? `0 2px 8px ${glow}` : 'none',
+                transition: 'opacity 0.15s',
+              }}
+              onMouseEnter={e => { (e.target as HTMLElement).style.opacity = '0.75'; }}
+              onMouseLeave={e => { (e.target as HTMLElement).style.opacity = '1'; }}
+            >G{g.gameNumber}</button>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-function TeamRow({
-  name,
-  fullName,
-  seed,
-  wins,
-  isWinner,
-  conf,
-}: {
-  name: string;
-  fullName: string;
-  seed: number;
-  wins: number;
-  isWinner: boolean;
-  conf: string;
-}) {
+function TeamRow({ abbr, fullName, seed, wins, isWinner, accent }:
+  { abbr: string; fullName: string; seed: number; wins: number; isWinner: boolean; accent: string }) {
   return (
-    <div className={`flex items-center gap-2 ${isWinner ? 'text-white' : 'text-gray-500'}`}>
-      <span className="text-xs text-gray-600 w-4 text-right">{seed}</span>
-      <span
-        className={`text-sm font-bold flex-1 truncate ${isWinner ? CONF_COLORS[conf] : ''}`}
-        title={fullName}
-      >
-        {name}
-      </span>
-      <span
-        className={`text-sm font-black tabular-nums ${
-          isWinner ? 'text-white' : 'text-gray-600'
-        }`}
-      >
-        {wins}
-      </span>
-      {isWinner && <span className="text-xs">✓</span>}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 12, color: '#253545', minWidth: 14, textAlign: 'right' }}>{seed}</span>
+      <span title={fullName} style={{
+        fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 14,
+        letterSpacing: '0.04em', textTransform: 'uppercase',
+        flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        color: isWinner ? '#e8f0ff' : '#2e4060',
+      }}>{abbr}</span>
+      <span style={{
+        fontFamily: '"Bebas Neue", sans-serif', fontSize: 22, lineHeight: 1,
+        color: isWinner ? accent : '#1a2535',
+        textShadow: isWinner ? `0 0 12px ${accent}90` : 'none',
+      }}>{wins}</span>
+      {isWinner && <span style={{ fontSize: 11, color: accent }}>✓</span>}
     </div>
-  );
-}
-
-function GameRow({
-  game,
-  series,
-  onGameClick,
-}: {
-  game: GameResult;
-  series: SeriesResult;
-  onGameClick: Props['onGameClick'];
-}) {
-  const homeIsA = game.homeTeam === series.teamA.team.abbreviation;
-  const homeTeamFull = homeIsA
-    ? `${series.teamA.team.city} ${series.teamA.team.name}`
-    : `${series.teamB.team.city} ${series.teamB.team.name}`;
-  const awayTeamFull = homeIsA
-    ? `${series.teamB.team.city} ${series.teamB.team.name}`
-    : `${series.teamA.team.city} ${series.teamA.team.name}`;
-
-  return (
-    <button
-      onClick={() =>
-        onGameClick({ game, homeTeam: homeTeamFull, awayTeam: awayTeamFull })
-      }
-      className="w-full flex items-center gap-2 text-xs hover:bg-gray-800 px-1 py-0.5 rounded transition-colors text-left"
-    >
-      <span className="text-gray-600 w-4">G{game.gameNumber}</span>
-      <span className="text-gray-400 flex-1">
-        {game.awayTeam} @ {game.homeTeam}
-      </span>
-      <span className="font-mono font-bold tabular-nums text-white">
-        {game.awayScore}–{game.homeScore}
-      </span>
-    </button>
   );
 }

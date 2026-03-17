@@ -34,8 +34,6 @@ export default function App() {
     setError(null);
     setBracket(null);
     setLoading(true);
-
-    // Cycle through loading messages
     let msgIdx = 0;
     setLoadingMsg(LOADING_MESSAGES[0]);
     const msgInterval = setInterval(() => {
@@ -44,9 +42,7 @@ export default function App() {
     }, 2500);
 
     try {
-      // Fetch ESPN standings + build rosters client-side
       const teamsRaw = await getTeamsWithRosters(year);
-
       const teams: TeamWithRoster[] = teamsRaw.map(t => ({
         team: t.team,
         players: t.players,
@@ -55,13 +51,8 @@ export default function App() {
         adjustedScore: t.winPct,
         seed: 0,
       }));
-
-      // Apply random jitter and select 8 East + 8 West playoff teams
       const { east, west } = selectPlayoffTeams(teams, year);
-
-      // Simulate the full bracket
       const result = simulateBracket(east, west, year);
-
       setBracket(result);
       setTab('bracket');
     } catch (err: any) {
@@ -73,146 +64,222 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      {/* Header */}
-      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur sticky top-0 z-40">
-        <div className="max-w-screen-2xl mx-auto px-6 py-4 flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">🏀</span>
+    <div style={{ minHeight: '100vh', background: '#080E1A', color: '#fff', fontFamily: "'Roboto Condensed', sans-serif" }}>
+
+      {/* ── TOP HEADER ── */}
+      <header style={{
+        background: 'linear-gradient(180deg, #0A1020 0%, #0C1528 100%)',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        position: 'sticky', top: 0, zIndex: 40,
+      }}>
+        {/* Red accent line */}
+        <div style={{ height: 3, background: 'linear-gradient(90deg, #C8102E 0%, #1D428A 100%)' }} />
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', gap: 16 }}>
+
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 26 }}>🏀</span>
             <div>
-              <h1 className="text-xl font-black tracking-tight text-white leading-none">
-                NBA<span className="text-nba-red">alternate</span>
-              </h1>
-              <p className="text-xs text-gray-400 font-medium tracking-widest uppercase">Parallel Universe Playoffs</p>
+              <div style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 20, lineHeight: 1, letterSpacing: '0.02em', color: '#fff' }}>
+                NBA<span style={{ color: '#C8102E' }}>alternate</span>
+              </div>
+              <div style={{ fontSize: 9, color: '#4a6080', fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', lineHeight: 1.2 }}>
+                Parallel Universe Playoffs
+              </div>
             </div>
           </div>
 
+          {/* Tabs + New button (only when bracket exists) */}
           {bracket && (
-            <div className="ml-auto flex items-center gap-2">
-              {/* Tab switcher */}
-              <div className="flex bg-gray-800 border border-gray-700 rounded-lg p-0.5 gap-0.5">
-                <button
-                  onClick={() => setTab('bracket')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
-                    tab === 'bracket'
-                      ? 'bg-gray-600 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  🏆 Bracket
-                </button>
-                <button
-                  onClick={() => setTab('leaders')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
-                    tab === 'leaders'
-                      ? 'bg-gray-600 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  📊 Leaders
-                </button>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{
+                display: 'flex', background: '#0F1623',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 8, padding: 3, gap: 2,
+              }}>
+                {([['bracket', '🏆', 'Bracket'], ['leaders', '📊', 'Leaders']] as const).map(([key, icon, label]) => (
+                  <button key={key} onClick={() => setTab(key)}
+                    style={{
+                      padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                      fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 13,
+                      letterSpacing: '0.05em', textTransform: 'uppercase', transition: 'all 0.15s',
+                      background: tab === key ? '#1E2A3D' : 'transparent',
+                      color: tab === key ? '#fff' : '#5a7090',
+                    }}
+                  >{icon} {label}</button>
+                ))}
               </div>
-              <button
-                onClick={() => setBracket(null)}
-                className="text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded transition-colors"
-              >
-                ← New
-              </button>
+              <button onClick={() => setBracket(null)}
+                style={{
+                  padding: '7px 14px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'transparent', color: '#5a7090', cursor: 'pointer',
+                  fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 12,
+                  letterSpacing: '0.08em', textTransform: 'uppercase', transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { (e.target as HTMLElement).style.color = '#fff'; (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.25)'; }}
+                onMouseLeave={e => { (e.target as HTMLElement).style.color = '#5a7090'; (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)'; }}
+              >← New</button>
             </div>
           )}
         </div>
       </header>
 
-      {/* Main */}
+      {/* ── LANDING ── */}
       {!bracket && !loading && (
-        <main className="max-w-2xl mx-auto px-6 pt-20 pb-12 animate-fade-in">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-nba-blue/20 border border-nba-blue/30 text-nba-blue text-xs font-semibold px-3 py-1 rounded-full mb-6 uppercase tracking-widest">
-              What if...?
-            </div>
-            <h2 className="text-5xl font-black mb-4 leading-tight">
-              Rewrite NBA<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-nba-red to-orange-400">
-                History
+        <main style={{ maxWidth: 560, margin: '0 auto', padding: '60px 24px 48px', animation: 'fadeUp 0.5s ease both' }}>
+
+          {/* Hero */}
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: 'rgba(200,16,46,0.1)', border: '1px solid rgba(200,16,46,0.3)',
+              borderRadius: 999, padding: '5px 14px', marginBottom: 20,
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#C8102E', display: 'inline-block', boxShadow: '0 0 8px #C8102E' }} />
+              <span style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 11, letterSpacing: '0.2em', color: '#C8102E', textTransform: 'uppercase' }}>
+                What if…?
               </span>
-            </h2>
-            <p className="text-gray-400 text-lg leading-relaxed">
-              Pick a year. We'll grab the real rosters, remix the brackets,
-              and simulate every single game — box score and all — in an alternate universe.
+            </div>
+
+            <h1 style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 64, lineHeight: 0.95, letterSpacing: '-0.01em', marginBottom: 16 }}>
+              REWRITE<br />
+              <span style={{
+                background: 'linear-gradient(90deg, #C8102E 0%, #FF4D6A 40%, #C8102E 60%, #9E0820 100%)',
+                backgroundSize: '200% auto',
+                WebkitBackgroundClip: 'text', backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                animation: 'shimmer 3s linear infinite',
+                display: 'inline-block',
+              }}>NBA HISTORY</span>
+            </h1>
+            <p style={{ color: '#6080a0', fontSize: 16, lineHeight: 1.5, maxWidth: 400, margin: '0 auto' }}>
+              Pick a season. We'll grab the real standings, remix the brackets,
+              and simulate every game — box score and all.
             </p>
           </div>
 
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 space-y-6">
+          {/* Card */}
+          <div style={{
+            background: 'linear-gradient(145deg, #111827 0%, #0F1623 100%)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 16, padding: 32,
+            boxShadow: '0 24px 48px rgba(0,0,0,0.5)',
+          }}>
+
             {/* Year selector */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-300 mb-2">
-                Season Year
-              </label>
-              <div className="flex items-center gap-4">
-                <input
-                  type="range"
-                  min={YEAR_RANGE.min}
-                  max={YEAR_RANGE.max}
-                  value={year}
-                  onChange={e => setYear(Number(e.target.value))}
-                  className="flex-1 accent-nba-red"
-                />
-                <span className="text-3xl font-black text-nba-red tabular-nums w-20 text-center">
-                  {year}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+                <label style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 12, letterSpacing: '0.15em', color: '#4a6080', textTransform: 'uppercase' }}>
+                  Season
+                </label>
+                <span style={{ fontFamily: 'Bebas Neue, sans-serif', fontSize: 13, color: '#4a6080', letterSpacing: '0.05em' }}>
+                  {year - 1}–{year}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                {year - 1}–{year} NBA Season
-              </p>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 10 }}>
+                <input
+                  type="range"
+                  min={YEAR_RANGE.min} max={YEAR_RANGE.max}
+                  value={year}
+                  onChange={e => setYear(Number(e.target.value))}
+                  style={{ flex: 1 }}
+                />
+                <span style={{
+                  fontFamily: 'Bebas Neue, sans-serif', fontSize: 52, lineHeight: 1,
+                  color: '#C8102E', letterSpacing: '0.02em', minWidth: 90, textAlign: 'right',
+                  textShadow: '0 0 20px rgba(200,16,46,0.4)',
+                }}>{year}</span>
+              </div>
+
+              {/* Tick marks */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, paddingRight: 106 }}>
+                {Array.from({ length: YEAR_RANGE.max - YEAR_RANGE.min + 1 }, (_, i) => YEAR_RANGE.min + i).map(y => (
+                  <button key={y} onClick={() => setYear(y)}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0',
+                      fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 10,
+                      color: y === year ? '#C8102E' : '#2a3a55',
+                      transition: 'color 0.15s',
+                    }}
+                  >{y}</button>
+                ))}
+              </div>
             </div>
 
+            {/* Divider */}
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: 24 }} />
+
+            {/* Error */}
             {error && (
-              <div className="bg-red-950 border border-red-800 text-red-300 text-sm px-4 py-3 rounded-lg">
-                ⚠ {error}
-              </div>
+              <div style={{
+                background: 'rgba(200,16,46,0.1)', border: '1px solid rgba(200,16,46,0.3)',
+                borderRadius: 8, padding: '12px 16px', marginBottom: 16,
+                fontFamily: 'Roboto Condensed, sans-serif', fontSize: 14, color: '#ff8095',
+              }}>⚠ {error}</div>
             )}
 
-            <button
-              onClick={generate}
-              disabled={loading}
-              className="w-full bg-nba-red hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-lg py-4 rounded-xl transition-colors uppercase tracking-wide"
+            {/* CTA button */}
+            <button onClick={generate} disabled={loading}
+              style={{
+                width: '100%', padding: '16px 0',
+                background: 'linear-gradient(135deg, #C8102E 0%, #a00c24 100%)',
+                border: 'none', borderRadius: 10, cursor: 'pointer',
+                fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 18,
+                letterSpacing: '0.12em', textTransform: 'uppercase', color: '#fff',
+                boxShadow: '0 8px 24px rgba(200,16,46,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
+                transition: 'all 0.2s', opacity: loading ? 0.5 : 1,
+              }}
+              onMouseEnter={e => { if (!loading) (e.target as HTMLElement).style.boxShadow = '0 12px 32px rgba(200,16,46,0.6), inset 0 1px 0 rgba(255,255,255,0.15)'; }}
+              onMouseLeave={e => { (e.target as HTMLElement).style.boxShadow = '0 8px 24px rgba(200,16,46,0.4), inset 0 1px 0 rgba(255,255,255,0.1)'; }}
             >
               Generate Alternate Playoffs
             </button>
           </div>
 
-          <p className="text-center text-xs text-gray-700 mt-8">
-            Historical rosters bundled locally • Standings from <span className="text-gray-500">ESPN</span> • Simulation is purely fictional
+          <p style={{ textAlign: 'center', fontSize: 11, color: '#2a3a55', marginTop: 24, letterSpacing: '0.05em', fontFamily: 'Roboto Condensed, sans-serif' }}>
+            Historical rosters bundled locally · Standings from ESPN · Simulation is purely fictional
           </p>
         </main>
       )}
 
-      {/* Loading */}
+      {/* ── LOADING ── */}
       {loading && (
-        <div className="flex flex-col items-center justify-center pt-32 animate-fade-in">
-          <div className="relative mb-8">
-            <div className="w-20 h-20 rounded-full border-4 border-gray-800 border-t-nba-red animate-spin" />
-            <span className="absolute inset-0 flex items-center justify-center text-2xl">🏀</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: 120, animation: 'fadeUp 0.4s ease both' }}>
+          {/* Spinning ball */}
+          <div style={{ position: 'relative', width: 72, height: 72, marginBottom: 28 }}>
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: '50%',
+              border: '3px solid #1E2A3D',
+              borderTopColor: '#C8102E',
+              animation: 'spin 0.9s linear infinite',
+            }} />
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🏀</div>
           </div>
-          <p className="text-gray-300 text-lg font-medium animate-pulse-slow text-center max-w-sm">
+          <p style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 18, letterSpacing: '0.05em', color: '#8099bb', textAlign: 'center', maxWidth: 320, animation: 'pulse 2.5s ease-in-out infinite' }}>
             {loadingMsg}
           </p>
-          <p className="text-gray-600 text-sm mt-3">
-            Fetching {year - 1}–{year} season data…
+          <p style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 13, color: '#2a3a55', marginTop: 10, letterSpacing: '0.05em' }}>
+            Loading {year - 1}–{year} season…
           </p>
         </div>
       )}
 
-      {/* Bracket / Leaderboard */}
+      {/* ── RESULT ── */}
       {bracket && !loading && (
-        <div className="animate-fade-in">
-          {tab === 'bracket' ? (
-            <BracketView bracket={bracket} />
-          ) : (
-            <LeaderboardView bracket={bracket} />
-          )}
+        <div style={{ animation: 'fadeIn 0.4s ease both' }}>
+          {tab === 'bracket' ? <BracketView bracket={bracket} /> : <LeaderboardView bracket={bracket} />}
         </div>
       )}
+
+      {/* Global keyframe injection */}
+      <style>{`
+        @keyframes fadeUp  { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes fadeIn  { from { opacity:0 } to { opacity:1 } }
+        @keyframes shimmer { from { background-position:-200% center } to { background-position:200% center } }
+        @keyframes spin    { to { transform: rotate(360deg) } }
+        @keyframes pulse   { 0%,100% { opacity:1 } 50% { opacity:0.5 } }
+      `}</style>
     </div>
   );
 }

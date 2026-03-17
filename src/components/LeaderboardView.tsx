@@ -2,111 +2,130 @@ import { useState } from 'react';
 import type { PlayoffBracket } from '../lib/types';
 import { buildLeaderboard, topBy, type PlayoffLeader } from '../lib/leaderboard';
 
-interface Props {
-  bracket: PlayoffBracket;
-}
+interface Props { bracket: PlayoffBracket; }
 
 type Category = 'ppg' | 'rpg' | 'apg' | 'spg' | 'bpg';
 
-const CATEGORIES: { key: Category; label: string; icon: string; color: string }[] = [
-  { key: 'ppg', label: 'Points',   icon: '🔥', color: 'text-nba-red'    },
-  { key: 'rpg', label: 'Rebounds', icon: '💪', color: 'text-blue-400'   },
-  { key: 'apg', label: 'Assists',  icon: '🎯', color: 'text-green-400'  },
-  { key: 'spg', label: 'Steals',   icon: '⚡', color: 'text-yellow-400' },
-  { key: 'bpg', label: 'Blocks',   icon: '🛡', color: 'text-purple-400' },
+const CATEGORIES: { key: Category; label: string; abbr: string; accent: string; glow: string }[] = [
+  { key: 'ppg', label: 'Points',   abbr: 'PTS', accent: '#C8102E', glow: 'rgba(200,16,46,0.35)'   },
+  { key: 'rpg', label: 'Rebounds', abbr: 'REB', accent: '#1D428A', glow: 'rgba(29,66,138,0.35)'   },
+  { key: 'apg', label: 'Assists',  abbr: 'AST', accent: '#17a04a', glow: 'rgba(23,160,74,0.35)'   },
+  { key: 'spg', label: 'Steals',   abbr: 'STL', accent: '#c89010', glow: 'rgba(200,144,16,0.35)'  },
+  { key: 'bpg', label: 'Blocks',   abbr: 'BLK', accent: '#7c3aed', glow: 'rgba(124,58,237,0.35)'  },
 ];
 
-const POS_COLORS: Record<string, string> = {
-  PG: 'bg-blue-900/60 text-blue-300',
-  SG: 'bg-cyan-900/60 text-cyan-300',
-  SF: 'bg-green-900/60 text-green-300',
-  PF: 'bg-orange-900/60 text-orange-300',
-  C:  'bg-purple-900/60 text-purple-300',
+const POS_COLORS: Record<string, { bg: string; color: string }> = {
+  PG: { bg: 'rgba(29,66,138,0.35)',   color: '#8fb4ff' },
+  SG: { bg: 'rgba(6,120,140,0.35)',   color: '#5cd8e8' },
+  SF: { bg: 'rgba(23,120,60,0.35)',   color: '#5ce890' },
+  PF: { bg: 'rgba(180,80,16,0.35)',   color: '#ffaa55' },
+  C:  { bg: 'rgba(110,40,200,0.35)',  color: '#c084fc' },
 };
 
 function pct(n: number) {
   return n === 0 ? '—' : (n * 100).toFixed(1) + '%';
 }
 
-function MedalBadge({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="text-lg">🥇</span>;
-  if (rank === 2) return <span className="text-lg">🥈</span>;
-  if (rank === 3) return <span className="text-lg">🥉</span>;
-  return <span className="text-gray-500 font-bold tabular-nums w-6 text-center text-sm">{rank}</span>;
+function MedalIcon({ rank }: { rank: number }) {
+  if (rank === 1) return <span style={{ fontSize: 18, lineHeight: 1 }}>🥇</span>;
+  if (rank === 2) return <span style={{ fontSize: 18, lineHeight: 1 }}>🥈</span>;
+  if (rank === 3) return <span style={{ fontSize: 18, lineHeight: 1 }}>🥉</span>;
+  return (
+    <span style={{
+      fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 13,
+      color: '#2a3a55', minWidth: 20, textAlign: 'center', display: 'inline-block',
+    }}>{rank}</span>
+  );
 }
 
-function StatBar({ value, max, color }: { value: number; max: number; color: string }) {
-  const pct = Math.min(100, (value / max) * 100);
+function StatBar({ value, max, accent }: { value: number; max: number; accent: string }) {
+  const w = Math.min(100, (value / max) * 100);
   return (
-    <div className="w-full bg-gray-800 rounded-full h-1 mt-1">
-      <div className={`h-1 rounded-full ${color}`} style={{ width: `${pct}%` }} />
+    <div style={{ width: '100%', height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 2, marginTop: 5, overflow: 'hidden' }}>
+      <div style={{ height: '100%', width: `${w}%`, background: accent, borderRadius: 2, transition: 'width 0.4s ease' }} />
     </div>
   );
 }
 
-function LeaderTable({
-  leaders,
-  category,
-  color,
+function LeaderRow({
+  player, rank, category, accent, glow, maxVal, isFirst,
 }: {
-  leaders: PlayoffLeader[];
-  category: Category;
-  color: string;
+  player: PlayoffLeader; rank: number; category: Category;
+  accent: string; glow: string; maxVal: number; isFirst: boolean;
 }) {
-  const maxVal = leaders[0]?.[category] as number ?? 1;
-
-  const barColor: Record<Category, string> = {
-    ppg: 'bg-nba-red',
-    rpg: 'bg-blue-500',
-    apg: 'bg-green-500',
-    spg: 'bg-yellow-500',
-    bpg: 'bg-purple-500',
-  };
+  const pos = POS_COLORS[player.position] ?? { bg: 'rgba(255,255,255,0.08)', color: '#8099bb' };
+  const val = player[category] as number;
 
   return (
-    <div className="space-y-1">
-      {leaders.map(p => (
-        <div
-          key={p.playerId}
-          className="flex items-center gap-3 bg-gray-900 hover:bg-gray-800/80 border border-gray-800 hover:border-gray-700 rounded-xl px-4 py-3 transition-colors group"
-        >
-          {/* Rank */}
-          <div className="w-7 flex-shrink-0 flex justify-center">
-            <MedalBadge rank={p.rank} />
-          </div>
+    <div
+      style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        background: isFirst ? 'rgba(255,255,255,0.04)' : '#0F1623',
+        border: `1px solid ${isFirst ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'}`,
+        borderLeft: `3px solid ${isFirst ? accent : 'transparent'}`,
+        borderRadius: 10, padding: '10px 14px',
+        transition: 'background 0.15s',
+        cursor: 'default',
+      }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isFirst ? 'rgba(255,255,255,0.04)' : '#0F1623'; }}
+    >
+      <div style={{ width: 26, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+        <MedalIcon rank={rank} />
+      </div>
 
-          {/* Name + team */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-white text-sm truncate">{p.playerName}</span>
-              <span className={`text-xs px-1.5 py-0.5 rounded font-bold flex-shrink-0 ${POS_COLORS[p.position] ?? 'bg-gray-800 text-gray-400'}`}>
-                {p.position}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs text-gray-500">{p.teamAbb}</span>
-              <span className="text-xs text-gray-600">·</span>
-              <span className="text-xs text-gray-600">{p.gp}G</span>
-              <span className="text-xs text-gray-600">·</span>
-              <span className="text-xs text-gray-600">{p.mpg} min</span>
-            </div>
-            <StatBar value={p[category] as number} max={maxVal} color={barColor[category]} />
-          </div>
-
-          {/* Secondary stats */}
-          <div className="hidden md:flex items-center gap-4 text-xs text-gray-500 flex-shrink-0">
-            {category !== 'ppg' && <span>{p.ppg} pts</span>}
-            {category !== 'rpg' && <span>{p.rpg} reb</span>}
-            {category !== 'apg' && <span>{p.apg} ast</span>}
-            <span>{pct(p.fgPct)} FG</span>
-          </div>
-
-          {/* Main stat */}
-          <div className={`text-2xl font-black tabular-nums flex-shrink-0 ${color}`}>
-            {p[category] as number}
-          </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 15,
+            color: '#e8f0ff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>{player.playerName}</span>
+          <span style={{
+            fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 10,
+            letterSpacing: '0.05em', padding: '2px 6px', borderRadius: 4, flexShrink: 0,
+            background: pos.bg, color: pos.color,
+          }}>{player.position}</span>
         </div>
-      ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+          <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: '#4a6080' }}>{player.teamAbb}</span>
+          <span style={{ color: '#253545', fontSize: 11 }}>·</span>
+          <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: '#2a3a55' }}>{player.gp}G</span>
+          <span style={{ color: '#253545', fontSize: 11 }}>·</span>
+          <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: '#2a3a55' }}>{player.mpg} min</span>
+        </div>
+        <StatBar value={val} max={maxVal} accent={accent} />
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+        {category !== 'ppg' && (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: '#3a5070', letterSpacing: '0.03em' }}>{player.ppg}</div>
+            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: '#2a3a55', letterSpacing: '0.12em', textTransform: 'uppercase' }}>pts</div>
+          </div>
+        )}
+        {category !== 'rpg' && (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: '#3a5070', letterSpacing: '0.03em' }}>{player.rpg}</div>
+            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: '#2a3a55', letterSpacing: '0.12em', textTransform: 'uppercase' }}>reb</div>
+          </div>
+        )}
+        {category !== 'apg' && (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: '#3a5070', letterSpacing: '0.03em' }}>{player.apg}</div>
+            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: '#2a3a55', letterSpacing: '0.12em', textTransform: 'uppercase' }}>ast</div>
+          </div>
+        )}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: '#3a5070', letterSpacing: '0.03em' }}>{pct(player.fgPct)}</div>
+          <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: '#2a3a55', letterSpacing: '0.12em', textTransform: 'uppercase' }}>fg%</div>
+        </div>
+      </div>
+
+      <div style={{
+        fontFamily: '"Bebas Neue", sans-serif', fontSize: 36, lineHeight: 1,
+        letterSpacing: '0.02em', color: accent, flexShrink: 0, minWidth: 52, textAlign: 'right',
+        textShadow: isFirst ? `0 0 16px ${glow}` : 'none',
+      }}>{val}</div>
     </div>
   );
 }
@@ -116,54 +135,121 @@ export function LeaderboardView({ bracket }: Props) {
   const leaders = buildLeaderboard(bracket);
   const cat = CATEGORIES.find(c => c.key === active)!;
   const top = topBy(leaders, active, 15);
+  const maxVal = (top[0]?.[active] as number) ?? 1;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      {/* Title */}
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-black text-white mb-1">
-          Playoff Leaders
-        </h2>
-        <p className="text-gray-500 text-sm">
-          {bracket.year - 1}–{bracket.year} Alternate Universe Playoffs
-        </p>
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 16px 64px' }}>
+
+      {/* TITLE */}
+      <div style={{ textAlign: 'center', marginBottom: 28 }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          background: 'rgba(255,184,28,0.08)', border: '1px solid rgba(255,184,28,0.2)',
+          borderRadius: 999, padding: '4px 14px', marginBottom: 14,
+        }}>
+          <span style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 10, letterSpacing: '0.25em', color: '#8a6a00', textTransform: 'uppercase' }}>
+            {bracket.year - 1}–{bracket.year} Alternate Universe
+          </span>
+        </div>
+        <h2 style={{
+          fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 42,
+          lineHeight: 0.95, letterSpacing: '0.01em', textTransform: 'uppercase',
+          color: '#fff', marginBottom: 0,
+        }}>Playoff Leaders</h2>
       </div>
 
-      {/* Category tabs */}
-      <div className="flex gap-2 mb-6 bg-gray-900 border border-gray-800 rounded-2xl p-1.5">
-        {CATEGORIES.map(c => (
-          <button
-            key={c.key}
-            onClick={() => setActive(c.key)}
-            className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-xl text-xs font-bold transition-all ${
-              active === c.key
-                ? 'bg-gray-800 text-white shadow'
-                : 'text-gray-500 hover:text-gray-300'
-            }`}
-          >
-            <span className="text-base">{c.icon}</span>
-            <span>{c.label}</span>
-          </button>
+      {/* CATEGORY TABS */}
+      <div style={{
+        display: 'flex', gap: 6, marginBottom: 24,
+        background: '#0C1420', border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: 12, padding: 4,
+      }}>
+        {CATEGORIES.map(c => {
+          const isActive = active === c.key;
+          return (
+            <button
+              key={c.key}
+              onClick={() => setActive(c.key)}
+              style={{
+                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                gap: 2, padding: '10px 4px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                background: isActive ? '#1a2640' : 'transparent',
+                borderBottom: isActive ? `2px solid ${c.accent}` : '2px solid transparent',
+                transition: 'all 0.15s',
+              }}
+            >
+              <span style={{
+                fontFamily: '"Bebas Neue", sans-serif', fontSize: 20, lineHeight: 1,
+                letterSpacing: '0.03em',
+                color: isActive ? c.accent : '#2a3a55',
+                textShadow: isActive ? `0 0 10px ${c.glow}` : 'none',
+                transition: 'all 0.15s',
+              }}>{c.abbr}</span>
+              <span style={{
+                fontFamily: 'Oswald, sans-serif', fontWeight: 600, fontSize: 9,
+                letterSpacing: '0.15em', textTransform: 'uppercase',
+                color: isActive ? '#8099bb' : '#2a3a55', transition: 'color 0.15s',
+              }}>{c.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* SECTION HEADER */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        marginBottom: 10, padding: '0 2px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 3, height: 18, background: cat.accent, borderRadius: 2, boxShadow: `0 0 8px ${cat.glow}` }} />
+          <span style={{
+            fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 13,
+            letterSpacing: '0.18em', textTransform: 'uppercase', color: cat.accent,
+          }}>{cat.label} Per Game</span>
+        </div>
+        <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: '#2a3a55', letterSpacing: '0.05em' }}>
+          Top 15 · min. 2 games
+        </span>
+      </div>
+
+      {/* ROWS */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {top.map((p, i) => (
+          <LeaderRow
+            key={p.playerId}
+            player={p}
+            rank={p.rank}
+            category={active}
+            accent={cat.accent}
+            glow={cat.glow}
+            maxVal={maxVal}
+            isFirst={i === 0}
+          />
         ))}
       </div>
 
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-3 px-4">
-        <span className={`text-sm font-bold uppercase tracking-widest ${cat.color}`}>
-          {cat.icon} {cat.label} per game
-        </span>
-        <span className="text-gray-700 text-xs ml-auto">top 15 · min. 2 games</span>
-      </div>
-
-      {/* Table */}
-      <LeaderTable leaders={top} category={active} color={cat.color} />
-
-      {/* Champion callout */}
-      <div className="mt-8 bg-yellow-950/40 border border-yellow-800/40 rounded-2xl p-4 flex items-center gap-3">
-        <span className="text-2xl">🏆</span>
+      {/* CHAMPION CALLOUT */}
+      <div style={{
+        marginTop: 32,
+        background: 'linear-gradient(135deg, rgba(255,184,28,0.06) 0%, rgba(255,184,28,0.02) 100%)',
+        border: '1px solid rgba(255,184,28,0.18)',
+        borderLeft: '3px solid #FFB81C',
+        borderRadius: 10, padding: '14px 18px',
+        display: 'flex', alignItems: 'center', gap: 14,
+      }}>
+        <span style={{ fontSize: 28, lineHeight: 1 }}>🏆</span>
         <div>
-          <p className="text-xs text-yellow-600 font-bold uppercase tracking-widest">Champion</p>
-          <p className="text-white font-black">{bracket.champion.team.fullName}</p>
+          <div style={{ fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', color: '#8a6a00', marginBottom: 3 }}>
+            Champion
+          </div>
+          <div style={{
+            fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 20,
+            letterSpacing: '0.02em', textTransform: 'uppercase',
+            background: 'linear-gradient(180deg, #FFE180 0%, #FFB81C 100%)',
+            WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          }}>
+            {bracket.champion.team.fullName}
+          </div>
         </div>
       </div>
     </div>
