@@ -33,7 +33,7 @@ function MedalIcon({ rank }: { rank: number }) {
   return (
     <span style={{
       fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 13,
-      color: '#2a3a55', minWidth: 20, textAlign: 'center', display: 'inline-block',
+      color: 'var(--c-text4)', minWidth: 20, textAlign: 'center', display: 'inline-block',
     }}>{rank}</span>
   );
 }
@@ -41,7 +41,7 @@ function MedalIcon({ rank }: { rank: number }) {
 function StatBar({ value, max, accent }: { value: number; max: number; accent: string }) {
   const w = Math.min(100, (value / max) * 100);
   return (
-    <div style={{ width: '100%', height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 2, marginTop: 5, overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: 2, background: 'var(--c-row-hover)', borderRadius: 2, marginTop: 5, overflow: 'hidden' }}>
       <div style={{ height: '100%', width: `${w}%`, background: accent, borderRadius: 2, transition: 'width 0.4s ease' }} />
     </div>
   );
@@ -53,21 +53,21 @@ function LeaderRow({
   player: PlayoffLeader; rank: number; category: Category;
   accent: string; glow: string; maxVal: number; isFirst: boolean;
 }) {
-  const pos = POS_COLORS[player.position] ?? { bg: 'rgba(255,255,255,0.08)', color: '#8099bb' };
+  const pos = POS_COLORS[player.position] ?? { bg: 'rgba(255,255,255,0.08)', color: 'var(--c-text2)' };
   const val = player[category] as number;
 
   return (
     <div
       style={{
         display: 'flex', alignItems: 'center', gap: 12,
-        background: isFirst ? 'rgba(255,255,255,0.04)' : '#0F1623',
-        border: `1px solid ${isFirst ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)'}`,
+        background: isFirst ? 'var(--c-surface-active)' : 'var(--c-surface)',
+        border: `1px solid ${isFirst ? 'var(--c-border-md)' : 'var(--c-border-sm)'}`,
         borderLeft: `3px solid ${isFirst ? accent : 'transparent'}`,
         borderRadius: 10, padding: '10px 14px',
         transition: 'background 0.15s',
         cursor: 'default',
       }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--c-row-hover)'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isFirst ? 'rgba(255,255,255,0.04)' : '#0F1623'; }}
     >
       <div style={{ width: 26, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
@@ -78,7 +78,7 @@ function LeaderRow({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
             fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 15,
-            color: '#e8f0ff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            color: 'var(--c-text1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           }}>{player.playerName}</span>
           <span style={{
             fontFamily: 'Oswald, sans-serif', fontWeight: 700, fontSize: 10,
@@ -87,11 +87,11 @@ function LeaderRow({
           }}>{player.position}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-          <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: '#4a6080' }}>{player.teamAbb}</span>
-          <span style={{ color: '#253545', fontSize: 11 }}>·</span>
-          <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: '#2a3a55' }}>{player.gp}G</span>
-          <span style={{ color: '#253545', fontSize: 11 }}>·</span>
-          <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: '#2a3a55' }}>{player.mpg} min</span>
+          <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: 'var(--c-text3)' }}>{player.teamAbb}</span>
+          <span style={{ color: 'var(--c-text5)', fontSize: 11 }}>·</span>
+          <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: 'var(--c-text4)' }}>{player.gp}G</span>
+          <span style={{ color: 'var(--c-text5)', fontSize: 11 }}>·</span>
+          <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: 'var(--c-text4)' }}>{player.mpg} min</span>
         </div>
         <StatBar value={val} max={maxVal} accent={accent} />
       </div>
@@ -99,25 +99,25 @@ function LeaderRow({
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
         {category !== 'ppg' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: '#3a5070', letterSpacing: '0.03em' }}>{player.ppg}</div>
-            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: '#2a3a55', letterSpacing: '0.12em', textTransform: 'uppercase' }}>pts</div>
+            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: 'var(--c-stat-dim)', letterSpacing: '0.03em' }}>{player.ppg}</div>
+            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: 'var(--c-text4)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>pts</div>
           </div>
         )}
         {category !== 'rpg' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: '#3a5070', letterSpacing: '0.03em' }}>{player.rpg}</div>
-            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: '#2a3a55', letterSpacing: '0.12em', textTransform: 'uppercase' }}>reb</div>
+            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: 'var(--c-stat-dim)', letterSpacing: '0.03em' }}>{player.rpg}</div>
+            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: 'var(--c-text4)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>reb</div>
           </div>
         )}
         {category !== 'apg' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: '#3a5070', letterSpacing: '0.03em' }}>{player.apg}</div>
-            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: '#2a3a55', letterSpacing: '0.12em', textTransform: 'uppercase' }}>ast</div>
+            <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: 'var(--c-stat-dim)', letterSpacing: '0.03em' }}>{player.apg}</div>
+            <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: 'var(--c-text4)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>ast</div>
           </div>
         )}
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: '#3a5070', letterSpacing: '0.03em' }}>{pct(player.fgPct)}</div>
-          <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: '#2a3a55', letterSpacing: '0.12em', textTransform: 'uppercase' }}>fg%</div>
+          <div style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: 15, color: 'var(--c-stat-dim)', letterSpacing: '0.03em' }}>{pct(player.fgPct)}</div>
+          <div style={{ fontFamily: 'Oswald, sans-serif', fontSize: 9, color: 'var(--c-text4)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>fg%</div>
         </div>
       </div>
 
@@ -161,7 +161,7 @@ export function LeaderboardView({ bracket }: Props) {
       {/* CATEGORY TABS */}
       <div style={{
         display: 'flex', gap: 6, marginBottom: 24,
-        background: '#0C1420', border: '1px solid rgba(255,255,255,0.07)',
+        background: 'var(--c-surface2)', border: '1px solid var(--c-border)',
         borderRadius: 12, padding: 4,
       }}>
         {CATEGORIES.map(c => {
@@ -207,7 +207,7 @@ export function LeaderboardView({ bracket }: Props) {
             letterSpacing: '0.18em', textTransform: 'uppercase', color: cat.accent,
           }}>{cat.label} Per Game</span>
         </div>
-        <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: '#2a3a55', letterSpacing: '0.05em' }}>
+        <span style={{ fontFamily: 'Roboto Condensed, sans-serif', fontSize: 11, color: 'var(--c-text4)', letterSpacing: '0.05em' }}>
           Top 15 · min. 2 games
         </span>
       </div>
